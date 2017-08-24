@@ -1,7 +1,5 @@
 package fishy.sample.lanchatsample;
 
-import android.util.Log;
-
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.BufferedInputStream;
@@ -9,44 +7,35 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
 
 /**
- * Created by nanheng on 2017/8/22.
+ * Created by nanheng on 2017/8/23.
  */
 
-public class ServerThread extends Thread {
+public class SocketThread extends Thread {
     final String strSuccess = "receive Msg Success";
     boolean flag = true;
-    boolean runFlag = true;
+    Socket client;
 
-    public ServerThread() {
-
-    }
-
-    public void setFlag(boolean flag) {
-        this.flag = flag;
+    SocketThread(Socket client) {
+        this.client = client;
+        flag = true;
     }
 
     @Override
     public void run() {
         try {
-            ServerSocket serverSocket = new ServerSocket(ConnectConfig.port);
-            while (runFlag) {
-                Socket client = serverSocket.accept();
-                String remoteIp = client.getInetAddress().getHostAddress();
-                TempIpInfo.recordRecentIp(remoteIp + "");
-                new SocketThread(client).start();
+            while (flag) {
+                boolean isSendSuccess = receiveMsg(client);
+                if (isSendSuccess) {
+                    sendMsg(client, "");
+                }
+                Thread.sleep(2000);
             }
-//            Log.i("chat", "connected:" + remoteIp + ":" + client.getPort());
-//            boolean isSendSuccess = receiveMsg(client);
-//            if (isSendSuccess) {
-//                sendMsg(client, "");
-//            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (InterruptedException e) {
+
         }
     }
 
@@ -83,9 +72,5 @@ public class ServerThread extends Thread {
             e.printStackTrace();
             return false;
         }
-    }
-
-    public void disConnect() {
-        runFlag = false;
     }
 }
